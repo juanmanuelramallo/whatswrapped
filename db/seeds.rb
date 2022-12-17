@@ -116,30 +116,6 @@ Query.find_or_initialize_by(name: "Cantidad de mensajes diarios en promedio por 
     avg(count) desc;
 SQL
 
-Query.find_or_initialize_by(name: "Las 10 palabras más usadas").update!(query: <<~SQL)
-  select
-    sender,
-    word,
-    count(*)
-  from (
-    select
-      sender,
-      regexp_split_to_table(lower(message), '\W+') as word
-    from
-      <%= table %>
-  ) as words
-  where
-    word not in ('a', 'de', 'el', 'en', 'la', 'lo', 'que', 'se', 'un', 'una', 'con', 'pero', 'para', 'los', 'las', 'por')
-    and length(word) > 2
-    and word !~* 'jaja[ja]*'
-  group by
-    sender,
-    word
-  order by
-    count(*) desc
-  limit 10;
-SQL
-
 Query.find_or_initialize_by(name: "Quién se ríe más").update!(query: <<~SQL)
   select
     sender,
@@ -152,4 +128,33 @@ Query.find_or_initialize_by(name: "Quién se ríe más").update!(query: <<~SQL)
     sender
   order by
     count(*) desc;
+SQL
+
+Query.find_or_initialize_by(name: "Las 10 palabras más usadas").update!(query: <<~SQL)
+  with counts as (
+    select
+      sender,
+      word,
+      count(*) as count
+    from (
+      select
+        sender,
+        regexp_split_to_table(lower(message), '\W+') as word
+      from
+        <%= table %>
+    ) as words
+    where
+      word not in ('a', 'de', 'el', 'en', 'la', 'lo', 'que', 'se', 'un', 'una', 'con', 'pero', 'para', 'los', 'las', 'por')
+      and length(word) > 2
+      and word !~* 'jaja[ja]*'
+    group by
+      sender,
+      word
+    order by
+      count(*) desc
+  )
+  (select * from counts where sender = '<%= senders[0] %>' limit 5)
+  union all
+  (select * from counts where sender = '<%= senders[1] %>' limit 5)
+  order by count desc;
 SQL

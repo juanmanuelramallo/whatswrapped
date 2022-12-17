@@ -50,8 +50,17 @@ class ReportsController < ApplicationController
       and message not like '%<Media omitted>'
     SQL
 
+    senders = ApplicationRecord.connection.execute(<<~SQL)
+      select
+        sender
+      from processed_data_#{sql_uuid}
+      group by sender
+      order by sender;
+    SQL
+
     variables = {
-      table: "processed_data_#{sql_uuid}"
+      table: "processed_data_#{sql_uuid}",
+      senders: senders.map { |row| row['sender'] }
     }
 
     Query.find_each do |query|
