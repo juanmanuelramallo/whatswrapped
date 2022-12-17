@@ -11,14 +11,15 @@ class ReportsController < ApplicationController
 
     report = Report.create!
     sql_uuid = report.uuid.gsub('-', '_')
+    connection = ApplicationRecord.connection_pool.checkout
 
-    result = ApplicationRecord.connection.execute(<<~SQL)
+    result = connection.execute(<<~SQL)
       create temporary table raw_data_#{sql_uuid} (
         row text
       );
     SQL
 
-    result = ApplicationRecord.connection.execute(<<~SQL)
+    result = connection.execute(<<~SQL)
       create temporary table processed_data_#{sql_uuid} (
         created_at timestamp,
         sender varchar(256),
@@ -26,11 +27,15 @@ class ReportsController < ApplicationController
       );
     SQL
 
-    result = ApplicationRecord.connection.execute(<<~SQL)
-      copy raw_data_#{sql_uuid} from '#{report_params[:chat_file].path}';
-    SQL
+    raw = connection.raw_connection
+    raw.exec("copy raw_data_#{sql_uuid} from stdin")
+    report_params[:chat_file].read.each_line do |line|
+      raw.put_copy_data(line)
+    end
+    raw.put_copy_end
+    while res = raw.get_result do; end
 
-    result = ApplicationRecord.connection.execute(<<~SQL)
+    result = connection.execute(<<~SQL)
       with processed as (
         select
           to_timestamp(
@@ -50,7 +55,7 @@ class ReportsController < ApplicationController
       and message not like '%<Media omitted>'
     SQL
 
-    senders = ApplicationRecord.connection.execute(<<~SQL)
+    senders = connection.execute(<<~SQL)
       select
         sender
       from processed_data_#{sql_uuid}
@@ -65,7 +70,7 @@ class ReportsController < ApplicationController
 
     Query.find_each do |query|
       query_sql = query.to_sql(variables)
-      result = ApplicationRecord.connection.execute(query_sql)
+      result = connection.execute(query_sql)
       QueryExecution.create!(
         query: query_sql,
         query_name: query.name,
@@ -74,13 +79,15 @@ class ReportsController < ApplicationController
       )
     end
 
+    ApplicationRecord.connection_pool.checkin(connection)
+
     redirect_to report
   ensure
-    ApplicationRecord.connection.execute(<<~SQL)
+    connection.execute(<<~SQL)
       drop table if exists raw_data_#{sql_uuid};
     SQL
 
-    ApplicationRecord.connection.execute(<<~SQL)
+    connection.execute(<<~SQL)
       drop table if exists processed_data_#{sql_uuid};
     SQL
   end
