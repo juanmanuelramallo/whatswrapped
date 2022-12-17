@@ -1,6 +1,32 @@
-
 <%= form_with url: reports_path, scope: :report, class: "flex flex-col items-center" do |f| %>
-  <%= f.file_field :chat_file, class: "bg-gray-100 p-2" %>
+  <%= f.file_field :chat_file, class: "bg-gray-100 p-2 rounded" %>
 
   <%= f.submit "Crear mi Whatsapp Wrapped", class: "rounded-md bg-black text-gray-100 py-2 px-4 mt-4 hover:bg-gray-800 cursor-pointer" %>
 <% end %>
+
+<article class="prose mt-6 p-6 bg-gray-100 rounded w-full mx-auto">
+  <h4>
+    ¿Cómo usar?
+  </h4>
+  <ol>
+    <li>Descarga el backup de una conversación de Whatsapp.
+      <a href="https://faq.whatsapp.com/1180414079177245" target="_blank" class="text-blue-500 hover:underline">Ayuda.</a>
+    </li>
+    <li>Sube el archivo .txt aquí</li>
+    <li>Crea tu Whatsapp envuelto</li>
+  </ol>
+
+  <h4>
+    ¿Cómo funciona?
+  </h4>
+  <p>
+    El .txt se procesa y se carga a una tabla temporal en la base de datos. Luego se ejecuta una colección de queries que extraen estadísticas de la conversación.
+    Una vez que se termina de procesar, se borra la tabla temporal y se muestra el resultado. El resultado se guarda en la base de datos para que puedas volver a verlo.
+  </p>
+  <p>
+    El archivo .txt subido no se guarda en ningún lado, solo se procesa y se borra.
+  </p>
+  <p>
+    Las URLs del resultado pueden compartirse con otras personas.
+  </p>
+</article>
