@@ -1,7 +1,5 @@
 class ReportsController < ApplicationController
   def create
-    puts report_params[:chat_file].inspect
-
     # Create two tmp tables in DB (one for raw data and the other for processed data)
     # Read file and insert into tmp table
     # Process tmp table and insert into final tmp table
