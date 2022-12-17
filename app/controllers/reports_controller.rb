@@ -69,7 +69,7 @@ class ReportsController < ApplicationController
   end
 
   def show
-    @report = Report.find(params[:uuid])
+    @report = Report.find_by(uuid: params[:uuid])
   end
 
   private
