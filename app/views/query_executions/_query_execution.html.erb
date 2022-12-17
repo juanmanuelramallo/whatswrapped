@@ -1,0 +1,23 @@
+<div class="bg-gray-50 py-4 px-2 mb-2">
+  <p class="text-gray-900 px-2 font-semibold">
+    <%= query_execution.query.name %>
+  </p>
+  <% if query_execution.result.is_a?(Array) %>
+    <table class="table-auto">
+      <tbody>
+        <% query_execution.result.each do |row| %>
+          <tr>
+            <% row.values.each do |value| %>
+              <td class="px-2"><%= value %></td>
+            <% end %>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  <% else %>
+    <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+      <strong class="font-bold">Error!</strong>
+      <span class="block sm:inline"><%= query_execution.result %></span>
+    </div>
+  <% end %>
+</div>

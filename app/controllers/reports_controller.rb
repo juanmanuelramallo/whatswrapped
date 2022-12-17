@@ -9,14 +9,17 @@ class ReportsController < ApplicationController
     # Delete tmp tables
     # Stores results and redirects to report page
 
+    report = Report.create!
+    sql_uuid = report.uuid.gsub('-', '_')
+
     result = ApplicationRecord.connection.execute(<<~SQL)
-      create temporary table raw_data (
+      create temporary table raw_data_#{sql_uuid} (
         row text
       );
     SQL
 
     result = ApplicationRecord.connection.execute(<<~SQL)
-      create temporary table processed_data (
+      create temporary table processed_data_#{sql_uuid} (
         created_at timestamp,
         sender varchar(256),
         message text
@@ -24,7 +27,7 @@ class ReportsController < ApplicationController
     SQL
 
     result = ApplicationRecord.connection.execute(<<~SQL)
-      copy raw_data from '#{report_params[:chat_file].path}';
+      copy raw_data_#{sql_uuid} from '#{report_params[:chat_file].path}';
     SQL
 
     result = ApplicationRecord.connection.execute(<<~SQL)
@@ -36,34 +39,37 @@ class ReportsController < ApplicationController
           ) as created_at,
           unnest(regexp_match(row, '\\s-\\s(.*?):')) as sender,
           unnest(regexp_match(row, ':\\s(.+)\\Z')) as message
-        from raw_data
+        from raw_data_#{sql_uuid}
       )
 
-      insert into processed_data
+      insert into processed_data_#{sql_uuid}
       select *
       from processed
       where sender is not null;
     SQL
 
-    result = ApplicationRecord.connection.execute(<<~SQL)
-      select
-        sender,
-        count(*) as "cantidad de veces que se envió la palabra dormir"
-      from
-        processed_data
-      where
-        message ~ 'dormir'
-      group by
-        sender;
-    SQL
+    variables = {
+      table: "processed_data_#{sql_uuid}"
+    }
+
+    Query.find_each do |query|
+      result = ApplicationRecord.connection.execute(query.to_sql(variables))
+      QueryExecution.create!(query: query, report: report, result: result)
+    end
+
+    redirect_to report
   ensure
     ApplicationRecord.connection.execute(<<~SQL)
-      drop table if exists raw_data;
+      drop table if exists raw_data_#{sql_uuid};
     SQL
 
     ApplicationRecord.connection.execute(<<~SQL)
-      drop table if exists processed_data;
+      drop table if exists processed_data_#{sql_uuid};
     SQL
+  end
+
+  def show
+    @report = Report.find(params[:id])
   end
 
   private
