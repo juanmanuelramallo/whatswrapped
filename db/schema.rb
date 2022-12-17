@@ -10,8 +10,35 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 0) do
+ActiveRecord::Schema[7.0].define(version: 2022_12_17_005612) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
+  create_table "queries", force: :cascade do |t|
+    t.text "query", null: false
+    t.string "name", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+  end
+
+  create_table "query_executions", force: :cascade do |t|
+    t.bigint "query_id", null: false
+    t.bigint "report_id", null: false
+    t.jsonb "variables"
+    t.jsonb "result", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["query_id"], name: "index_query_executions_on_query_id"
+    t.index ["report_id"], name: "index_query_executions_on_report_id"
+  end
+
+  create_table "reports", force: :cascade do |t|
+    t.uuid "uuid", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["uuid"], name: "index_reports_on_uuid", unique: true
+  end
+
+  add_foreign_key "query_executions", "queries"
+  add_foreign_key "query_executions", "reports"
 end
