@@ -20,7 +20,7 @@ Query.find_or_initialize_by(name: "Cantidad de emojis").update!(query: <<~SQL)
     sender;
 SQL
 
-Query.find_or_initialize_by(name: "Cantidad de links").update!(query: <<~SQL)
+Query.find_or_initialize_by(name: "Cantidad de links enviados").update!(query: <<~SQL)
   select
     sender,
     count(*)
@@ -116,7 +116,7 @@ Query.find_or_initialize_by(name: "Cantidad de mensajes diarios en promedio por 
     avg(count) desc;
 SQL
 
-Query.find_or_initialize_by(name: "Las 10 palabras más usadas por persona").update!(query: <<~SQL)
+Query.find_or_initialize_by(name: "Las 10 palabras más usadas").update!(query: <<~SQL)
   select
     sender,
     word,
@@ -129,11 +129,27 @@ Query.find_or_initialize_by(name: "Las 10 palabras más usadas por persona").upd
       <%= table %>
   ) as words
   where
-    word not in ('a', 'de', 'el', 'en', 'la', 'lo', 'que', 'se', 'un', 'una')
+    word not in ('a', 'de', 'el', 'en', 'la', 'lo', 'que', 'se', 'un', 'una', 'con', 'pero', 'para', 'los', 'las', 'por')
+    and length(word) > 2
+    and word !~* 'jaja[ja]*'
   group by
     sender,
     word
   order by
     count(*) desc
   limit 10;
+SQL
+
+Query.find_or_initialize_by(name: "Quién se ríe más").update!(query: <<~SQL)
+  select
+    sender,
+    count(*)
+  from
+    <%= table %>
+  where
+    message ~ '(jaja[ja]*|jeje[je]*|jiji[ji]*|haha[ha]*|hehe[he]*)'
+  group by
+    sender
+  order by
+    count(*) desc;
 SQL

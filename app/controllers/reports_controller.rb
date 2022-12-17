@@ -45,7 +45,9 @@ class ReportsController < ApplicationController
       insert into processed_data_#{sql_uuid}
       select *
       from processed
-      where sender is not null;
+      where sender is not null
+      and message not like 'null' -- These are instant photos
+      and message not like '%<Media omitted>'
     SQL
 
     variables = {
@@ -53,8 +55,14 @@ class ReportsController < ApplicationController
     }
 
     Query.find_each do |query|
-      result = ApplicationRecord.connection.execute(query.to_sql(variables))
-      QueryExecution.create!(query: query, report: report, result: result)
+      query_sql = query.to_sql(variables)
+      result = ApplicationRecord.connection.execute(query_sql)
+      QueryExecution.create!(
+        query: query_sql,
+        query_name: query.name,
+        report: report,
+        result: result
+      )
     end
 
     redirect_to report
@@ -69,7 +77,7 @@ class ReportsController < ApplicationController
   end
 
   def show
-    @report = Report.find_by(uuid: params[:uuid])
+    @report = Report.find_by!(uuid: params[:uuid])
   end
 
   private

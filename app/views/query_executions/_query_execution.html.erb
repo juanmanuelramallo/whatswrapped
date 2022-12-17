@@ -1,13 +1,13 @@
 <div class="bg-gray-50 py-4 px-2 mb-2">
   <p class="text-gray-900 px-2 font-semibold">
-    <%= query_execution.query.name %>
+    <%= query_execution.query_name %>
   </p>
   <% if query_execution.result.is_a?(Array) %>
     <table class="table-auto">
       <tbody>
         <% query_execution.result.each do |row| %>
           <tr>
-            <% row.values.each do |value| %>
+            <% row.sort.each do |(_key, value)| %>
               <td class="px-2"><%= value %></td>
             <% end %>
           </tr>
