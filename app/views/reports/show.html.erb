@@ -1,3 +1,5 @@
+<%= link_to "Crear un nuevo envuelto", new_report_path, class: "flex justify-center text-gray-500 hover:underline mb-6" %>
+
 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
   <% @report.query_executions.each do |query_execution| %>
     <%= render query_execution %>
@@ -6,9 +8,9 @@
 
 <article class="prose mt-6 p-6 bg-gray-100 rounded w-full mx-auto mb-6">
   <p class="mb-0">
-    Compartí este Whatsapp Envuelto:
+    Guardá este link para poder volver a verlo en cualquier momento.
   </p>
-  <p class="py-1 px-2 rounded mt-0 text-center">
+  <p class="py-1 px-2 rounded my-0 text-center">
     <%= link_to report_url(@report), report_url(@report) %>
   </p>
 </article>
