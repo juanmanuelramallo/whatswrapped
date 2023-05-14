@@ -37,7 +37,7 @@ class ReportsController < ApplicationController
       with processed as (
         select
           to_timestamp(
-            unnest(regexp_match(row, '\\d+/\\d+/\\d+')) || ' ' || unnest(regexp_match(row, '\\d\\d:\\d\\d')),
+            unnest(regexp_match(row, '\\d+/\\d+/\\d+')) || ' ' || unnest(regexp_match(row, '\\d+:\\d+')),
             'MM/DD/YY HH24:MI'
           ) as created_at,
           unnest(regexp_match(row, '\\s-\\s(.*?):')) as sender,

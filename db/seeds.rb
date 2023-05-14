@@ -56,43 +56,49 @@ Query.find_or_initialize_by(name: "El día que más hablamos").update!(query: <<
 SQL
 
 Query.find_or_initialize_by(name: "El día de la semana con más mensajes en promedio").update!(query: <<~SQL)
-  select
-    to_char(created_at, 'Day') as "día",
-    round(avg(count), 2)
-  from (
+  with counts_by_day_weekly as (
     select
-      date_trunc('day', created_at) as created_at,
-      count(*)
+      to_char(created_at, 'Day') as day,
+      to_char(created_at, 'WWYY') as weekyear,
+      count(*) as quantity
     from
       <%= table %>
     group by
-      date_trunc('day', created_at)
-  ) as counts
+      1, 2
+  )
+  select
+    day,
+    round(avg(quantity), 2) as average
+  from
+    counts_by_day_weekly
   group by
-    to_char(created_at, 'Day')
+    day
   order by
-    avg(count) desc
-  limit 1;
+    average desc
+  limit 1
 SQL
 
 Query.find_or_initialize_by(name: "El día de la semana con menos mensajes en promedio").update!(query: <<~SQL)
-  select
-    to_char(created_at, 'Day') as "día",
-    round(avg(count), 2)
-  from (
+  with counts_by_day_weekly as (
     select
-      date_trunc('day', created_at) as created_at,
-      count(*)
+      to_char(created_at, 'Day') as day,
+      to_char(created_at, 'WWYY') as weekyear,
+      count(*) as quantity
     from
       <%= table %>
     group by
-      date_trunc('day', created_at)
-  ) as counts
+      1, 2
+  )
+  select
+    day,
+    round(avg(quantity), 2) as average
+  from
+    counts_by_day_weekly
   group by
-    to_char(created_at, 'Day')
+    day
   order by
-    avg(count)
-  limit 1;
+    average asc
+  limit 1
 SQL
 
 Query.find_or_initialize_by(name: "Cantidad de mensajes diarios en promedio por persona").update!(query: <<~SQL)
